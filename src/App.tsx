@@ -1,13 +1,8 @@
-import React, { ReactElement } from 'react';
-import FoodGuide from './components/FoodGuide';
+import { ReactElement } from 'react';
+import Guide from './components/Guide';
 
-const App: React.FC = (): ReactElement => {
-  return (
-    <>
-      <h1>Welcome to the Food Guide!</h1>
-      <FoodGuide />
-    </>
-  );
-}
+const App: React.FC = (): ReactElement => (
+  <Guide />
+);
 
 export default App;

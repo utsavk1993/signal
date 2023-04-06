@@ -1,8 +1,9 @@
 import { ReactElement, useState, FC } from 'react';
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, Typography, makeStyles } from "@material-ui/core";
+import { Box, Button, FormControl, TextField, InputLabel, MenuItem, Select, Typography } from "@material-ui/core";
 import FoodGuide from '../FoodGuide';
+import { useStyles } from './UserDailyMenu.styles';
 
-const AGE_RANGES = [
+const AGE_RANGES: Array<{ value: string, label: string }> = [
   { value: '2 to 3', label: '2 to 3' },
   { value: '4 to 8', label: '4 to 8' },
   { value: '9 to 13', label: '9 to 13' },
@@ -13,23 +14,6 @@ const AGE_RANGES = [
   { value: '71+', label: '71+' },
 ];
 
-const useStyles = makeStyles((theme) => ({
-  container: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "45vh",
-  },
-  formControl: {
-    margin: theme.spacing(1),
-    minWidth: 120,
-  },
-  selectEmpty: {
-    marginTop: theme.spacing(2),
-  },
-}));
-
 const UserDailyMenu: FC = (): ReactElement => {
   const [age, setAge] = useState<string>('');
   const [gender, setGender] = useState<string>('');
@@ -37,11 +21,18 @@ const UserDailyMenu: FC = (): ReactElement => {
   const [displayFoodGuide, setDisplayFoodGuide] = useState<boolean>(false);
   const classes = useStyles();
 
-  return displayFoodGuide ? <FoodGuide age={age} gender={gender} /> : (
+  return displayFoodGuide ? <FoodGuide age={age} gender={gender} name={name} /> : (
     <Box className={classes.container}>
       <Typography variant="h4" gutterBottom>
-        Select Parameters
+        Input Parameters
       </Typography>
+      <FormControl className={classes.formControl}>
+        <TextField
+          id="name"
+          label="Name"
+          onChange={event => setName(event.target.value)}
+        />
+      </FormControl>
       <FormControl className={classes.formControl}>
         <InputLabel id="age-label">Age</InputLabel>
         <Select

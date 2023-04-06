@@ -1,18 +1,18 @@
-// @ts-nocheck
-import { ReactElement, FC, useEffect, useState } from 'react';
-// import { Typography, Grid, Card, CardHeader, CardContent, List, ListItem, ListItemText } from '@material-ui/core';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import { groupBy, uniq, uniqBy } from 'lodash';
+import { ReactElement, FC, useEffect, useState, ChangeEvent } from 'react';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionSummary, AccordionDetails, Typography } from '@material-ui/core';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import { groupBy, uniqBy } from 'lodash';
 import { parseCSV } from './utils';
 import servingsPerDay from '../../data/servings_per_day-en_ONPP.csv';
 import fgDirectionalStatements from '../../data/fg_directional_satements-en_ONPP.csv';
 import foodGroups from '../../data/foodgroups-en_ONPP.csv';
 import foods from '../../data/foods-en_ONPP_rev.csv';
+import { useStyles } from './FoodGuide.styles';
 
 interface FoodGuideProps {
   age: string;
   gender: string;
+  name: string;
 }
 
 const csvFiles = [
@@ -22,37 +22,16 @@ const csvFiles = [
   foods,
 ];
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    margin: theme.spacing(2),
-  },
-  foodGroup: {
-    marginBottom: theme.spacing(2),
-  },
-  foodGroupTitle: {
-    fontWeight: 'bold',
-    marginBottom: theme.spacing(1),
-  },
-  foodGroupServings: {
-    fontStyle: 'italic',
-    marginBottom: theme.spacing(1),
-  },
-  food: {
-    marginLeft: theme.spacing(2),
-    marginBottom: theme.spacing(1),
-  },
-  foodTitle: {
-    fontWeight: 'bold',
-  },
-  foodServingSize: {
-    fontStyle: 'italic',
-    marginBottom: theme.spacing(0.5),
-  },
-}));
-
-const FoodGuide: FC<FoodGuideProps> = ({ age, gender }: FoodGuideProps): ReactElement => {
-  const classes = useStyles();
+const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): ReactElement => {
+  const [expanded, setExpanded] = useState<string>('');
   const [data, setData] = useState<any>(null);
+  const groupedFoods = data ? groupBy(data.foodGroups, 'categorizedFoods') : null;
+
+  const classes = useStyles();
+
+  const handleChange = (panel: string) => (event: ChangeEvent<{}>, isExpanded: boolean) => {
+    setExpanded(isExpanded ? panel : '');
+  }
 
   // const constructData = async () => {
   //   const [servingsPerDay, fgDirectionalStatements, foodGroups, foods] = await Promise.all(
@@ -102,24 +81,23 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender }: FoodGuideProps): ReactEl
   // };
 
   const constructData = async () => {
-    const [servingsPerDay, fgDirectionalStatements, foodGroups, foods] = await Promise.all(
+    const [servingsPerDay, fgDirectionalStatements, foodGroups, foods]: any = await Promise.all(
       csvFiles.map(file => parseCSV(file))
     );
-
-    console.log(servingsPerDay, fgDirectionalStatements, foodGroups, foods);
 
     const filteredServings = servingsPerDay.filter((serving: any) => serving.ages === age && serving.gender === gender);
 
     const foodGroupsWithServings = foodGroups.map((group: any) => {
       const recommendedServings = filteredServings.find((serving: any) => serving.fgid === group.fgid)?.servings;
-
+  
       const groupFoods = foods.filter((food: any) => food.fgid === group.fgid).map((food: any) => {
         return {
           name: food.food,
           servingSize: food.srvg_sz,
+          category: food.fgcat_id,
         }
       });
-
+  
       return {
         name: group.foodgroup,
         recommendedServings,
@@ -127,10 +105,38 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender }: FoodGuideProps): ReactEl
       }
     });
 
+    const categorizedFoods = foodGroupsWithServings.reduce((acc: any, curr: any) => {
+      curr.foods.forEach((food: any) => {
+        if (!acc[food.category]) {
+          acc[food.category] = [];
+        }
+        acc[food.category].push(food);
+      });
+      return acc;
+    }, {});
+
+    // const foodGroupsWithServings = foodGroups.map((group: any) => {
+    //   const recommendedServings = filteredServings.find((serving: any) => serving.fgid === group.fgid)?.servings;
+
+    //   const groupFoods = foods.filter((food: any) => food.fgid === group.fgid).map((food: any) => {
+    //     return {
+    //       name: food.food,
+    //       servingSize: food.srvg_sz,
+    //     }
+    //   });
+
+    //   return {
+    //     name: group.foodgroup,
+    //     recommendedServings,
+    //     foods: groupFoods
+    //   }
+    // });
+
     return {
       age,
       gender,
-      foodGroups: uniqBy(foodGroupsWithServings, 'name')
+      foodGroups: uniqBy(foodGroupsWithServings, 'name'),
+      categories: categorizedFoods,
     }
   };
 
@@ -147,71 +153,66 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender }: FoodGuideProps): ReactEl
     return <Typography>Loading...</Typography>;
   }
 
-  // const renderFoods = (foods: any[]) => {
-  //   if (foods.length === 0) {
-  //     return <Typography variant="body2" color="textSecondary">No foods selected</Typography>;
-  //   }
-
-  //   return (
-  //     <List>
-  //       {foods.map((food) => (
-  //         <ListItem key={food.name}>
-  //           <ListItemText primary={food.name} secondary={`${food.servingSize} - ${food.calories} calories`} />
-  //         </ListItem>
-  //       ))}
-  //     </List>
-  //   );
-  // }
-
-  // const renderFoodGroups = () => {
-  //   return data.foodGroups.map((group: any) => (
-  //     <Grid item xs={12} sm={6} md={4} key={group.name}>
-  //       <Card>
-  //         <CardHeader title={group.name} subheader={`${group.selectedServings} of ${group.recommendedServings} servings`} />
-  //         <CardContent>
-  //           {renderFoods(group.foods)}
-  //         </CardContent>
-  //       </Card>
-  //     </Grid>
-  //   ));
-  // }
+  console.log(data);
 
   return (
     <>
-      <Typography variant="h4">{age} {gender}</Typography>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Food Group</TableCell>
-              <TableCell>Recommended Servings</TableCell>
-              <TableCell>Selected Servings</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data.foodGroups.map((foodGroup) => (
-              <TableRow key={foodGroup.name}>
-                <TableCell component="th" scope="row">
-                  {foodGroup.name}
-                </TableCell>
-                <TableCell>{foodGroup.recommendedServings}</TableCell>
-                <TableCell>
-                <ul>
-              {foodGroup.foods.map((food) => (
-                <li key={food.name}>
-                  {food.name} ({food.servingSize})
-                </li>
-              ))}
-            </ul>
-                </TableCell>
+      <Typography variant="h5" style={{ paddingTop: '10px' }}>
+        Guide for {name}, {gender} aged between {age}
+      </Typography>
+      <div className={classes.root}>
+        <TableContainer component={Paper}>
+          <Table className={classes.table} aria-label="Food Guide table">
+            <TableHead>
+              <TableRow>
+                <TableCell>Food Group</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {data.foodGroups.map((foodGroup: any) => (
+                <TableRow key={foodGroup.name}>
+                  <TableCell component="th" scope="row">
+                    <Accordion expanded={expanded === foodGroup.name} onChange={handleChange(foodGroup.name)}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography className={classes.heading}>
+                          {foodGroup.name} with {foodGroup.recommendedServings} recommended servings
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <TableContainer component={Paper}>
+                          <Table
+                            className={classes.table}
+                            aria-label={`${foodGroup.name} foods`}
+                          >
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>Name</TableCell>
+                                <TableCell align="center">Serving Size</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {foodGroup.foods.map((food: any) => (
+                                <TableRow key={food.name}>
+                                  <TableCell component="th" scope="row">
+                                    {food.name}
+                                  </TableCell>
+                                  <TableCell align="center">{food.servingSize}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </AccordionDetails>
+                    </Accordion>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
     </>
   );
-}
-  
-export default FoodGuide;
+};
 
+export default FoodGuide;

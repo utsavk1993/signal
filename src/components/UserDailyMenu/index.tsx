@@ -64,7 +64,7 @@ const UserDailyMenu: FC = (): ReactElement => {
         variant="contained"
         color="primary"
         onClick={() => setDisplayFoodGuide(true)}
-        disabled={!age || !gender}
+        disabled={!age || !gender || !name}
       >
         Continue
       </Button>

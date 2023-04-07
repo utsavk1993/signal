@@ -1,7 +1,7 @@
 import { ReactElement, FC, useEffect, useState, ChangeEvent } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Accordion, AccordionSummary, AccordionDetails, Typography } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { groupBy, uniqBy } from 'lodash';
+import { uniqBy } from 'lodash';
 import { parseCSV } from './utils';
 import servingsPerDay from '../../data/servings_per_day-en_ONPP.csv';
 import fgDirectionalStatements from '../../data/fg_directional_satements-en_ONPP.csv';
@@ -25,7 +25,7 @@ const csvFiles = [
 const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): ReactElement => {
   const [expanded, setExpanded] = useState<string>('');
   const [data, setData] = useState<any>(null);
-  const groupedFoods = data ? groupBy(data.foodGroups, 'categorizedFoods') : null;
+  // const groupedFoods = data ? groupBy(data.foodGroups, 'categorizedFoods') : null;
 
   const classes = useStyles();
 

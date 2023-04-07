@@ -1,20 +1,14 @@
 import { ReactElement, useState, FC } from 'react';
-import { Box, Button, FormControl, TextField, InputLabel, MenuItem, Select, Typography } from "@material-ui/core";
+import { Button, FormControl, TextField, InputLabel, MenuItem, Select, Typography, Grid } from "@material-ui/core";
 import FoodGuide from '../FoodGuide';
-import { useStyles } from './UserDailyMenu.styles';
+import { useStyles } from '../shared/styles';
+import { AGE_RANGES } from '../shared/enum';
 
-const AGE_RANGES: Array<{ value: string, label: string }> = [
-  { value: '2 to 3', label: '2 to 3' },
-  { value: '4 to 8', label: '4 to 8' },
-  { value: '9 to 13', label: '9 to 13' },
-  { value: '14 to 18', label: '14 to 18' },
-  { value: '19 to 30', label: '19 to 30' },
-  { value: '31 to 50', label: '31 to 50' },
-  { value: '51 to 70', label: '51 to 70' },
-  { value: '71+', label: '71+' },
-];
+interface UserDailyMenuProps {
+  setGuide: (guide: string) => void;
+}
 
-const UserDailyMenu: FC = (): ReactElement => {
+const UserDailyMenu: FC<UserDailyMenuProps> = ({ setGuide }: UserDailyMenuProps): ReactElement => {
   const [age, setAge] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [name, setName] = useState<string>('');
@@ -22,53 +16,72 @@ const UserDailyMenu: FC = (): ReactElement => {
   const classes = useStyles();
 
   return displayFoodGuide ? <FoodGuide age={age} gender={gender} name={name} /> : (
-    <Box className={classes.container}>
-      <Typography variant="h4" gutterBottom>
+    <>
+      <Typography variant="h4" gutterBottom className={classes.typography}>
         Input Parameters
       </Typography>
-      <FormControl className={classes.formControl}>
-        <TextField
-          id="name"
-          label="Name"
-          onChange={event => setName(event.target.value)}
-        />
-      </FormControl>
-      <FormControl className={classes.formControl}>
-        <InputLabel id="age-label">Age</InputLabel>
-        <Select
-          labelId="age-label"
-          id="age"
-          value={age}
-          onChange={event => setAge(event.target.value as string)}
-        >
-          {
-            AGE_RANGES.map(ageRange => (
-              <MenuItem key={ageRange.value} value={ageRange.value}>{ageRange.label}</MenuItem>
-            ))
-          }
-        </Select>
-      </FormControl>
-      <FormControl className={classes.formControl}>
-        <InputLabel id="gender-label">Gender</InputLabel>
-        <Select
-          labelId="gender-label"
-          id="gender"
-          value={gender}
-          onChange={event => setGender(event.target.value as string)}
-        >
-          <MenuItem value={"Male"}>Male</MenuItem>
-          <MenuItem value={"Female"}>Female</MenuItem>
-        </Select>
-      </FormControl>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => setDisplayFoodGuide(true)}
-        disabled={!age || !gender || !name}
-      >
-        Continue
-      </Button>
-    </Box>
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={4}>
+          <TextField
+            label="Name"
+            variant="outlined"
+            value={name}
+            onChange={event => setName(event.target.value)}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <FormControl variant="outlined" fullWidth className={classes.formControl}>
+            <InputLabel>Age</InputLabel>
+            <Select
+              value={age}
+              onChange={event => setAge(event.target.value as string)}
+              label="Gender"
+            >
+              {
+                AGE_RANGES.map(ageRange => (
+                  <MenuItem key={ageRange.value} value={ageRange.value}>{ageRange.label}</MenuItem>
+                ))
+              }
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <FormControl variant="outlined" fullWidth className={classes.formControl}>
+            <InputLabel>Gender</InputLabel>
+            <Select
+              value={gender}
+              onChange={event => setGender(event.target.value as string)}
+              label="Gender"
+            >
+              <MenuItem value="Male">Male</MenuItem>
+              <MenuItem value="Female">Female</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+      </Grid>
+      <Grid container spacing={2}>
+        <Grid item xs={1}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setGuide('')}
+          >
+            Back
+          </Button>
+        </Grid>
+        <Grid item xs={3}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setDisplayFoodGuide(true)}
+            disabled={!age || !gender || !name}
+          >
+            Continue
+          </Button>
+        </Grid>
+      </Grid>
+    </>
   );
 }
   

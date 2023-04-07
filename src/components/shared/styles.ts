@@ -9,10 +9,13 @@ export const useStyles = makeStyles((theme) => ({
     height: "45vh",
   },
   formControl: {
-    margin: theme.spacing(1),
+    marginBottom: theme.spacing(1),
     minWidth: 120,
   },
   selectEmpty: {
     marginTop: theme.spacing(2),
   },
+  typography: {
+    marginTop: theme.spacing(2),
+  }
 }));

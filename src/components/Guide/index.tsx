@@ -2,6 +2,7 @@ import { ReactElement, useState, FC } from 'react';
 import { Container, Typography, Grid, Button } from '@material-ui/core';
 import UserDailyMenu from '../UserDailyMenu';
 import { useStyles } from './Guide.styles';
+import FamilyDailyMenu from '../FamilyDailyMenu';
 
 enum Guides {
   YOU = 'you',
@@ -33,11 +34,12 @@ const Guide: FC = (): ReactElement => {
                 <Button fullWidth variant="contained" color="primary" onClick={() => setGuide(Guides.FAMILY)}>
                   For your loved ones
                 </Button>
-            </Grid>
+              </Grid>
             </Grid>
           )
         }
-        { guide === Guides.YOU && <UserDailyMenu /> }
+        { guide === Guides.YOU && <UserDailyMenu setGuide={setGuide} /> }
+        { guide === Guides.FAMILY && <FamilyDailyMenu setGuide={setGuide} /> }
       </Container>
     </div>
   );

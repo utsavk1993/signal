@@ -11,9 +11,7 @@ interface SelectBoxProps {
   items: Array<{ value: string; label: string }>;
 }
 
-
 const SelectBox: React.FC<SelectBoxProps> = ({ label, value, handleChange, items }: SelectBoxProps) => {
-
   const labelId = label.toLowerCase();
 
   return (

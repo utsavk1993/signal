@@ -85,6 +85,20 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): R
       csvFiles.map(file => parseCSV(file))
     );
 
+    const getDirectionalStatementsByFgid = () => {
+      const statementsByFgid: { [key: string]: string[] } = {};
+
+      fgDirectionalStatements.forEach((statement: any) => {
+        const { fgid, 'directional-statement': directionStatement } = statement;
+        if (!statementsByFgid[fgid]) {
+          statementsByFgid[fgid] = [];
+        }
+        statementsByFgid[fgid].push(directionStatement);
+      });
+
+      return statementsByFgid;
+    };
+
     const filteredServings = servingsPerDay.filter((serving: any) => serving.ages === age && serving.gender === gender);
 
     const foodGroupsWithServings = foodGroups.map((group: any) => {
@@ -101,7 +115,8 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): R
       return {
         name: group.foodgroup,
         recommendedServings,
-        foods: groupFoods
+        foods: groupFoods,
+        foodGroupId: group.fgid,
       }
     });
 
@@ -137,6 +152,7 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): R
       gender,
       foodGroups: uniqBy(foodGroupsWithServings, 'name'),
       categories: categorizedFoods,
+      directionalStatements: getDirectionalStatementsByFgid(),
     }
   };
 
@@ -176,6 +192,8 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): R
                       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                         <Typography className={classes.heading}>
                           {foodGroup.name} with {foodGroup.recommendedServings} recommended servings
+                          <br />
+                          Directions: {data.directionalStatements[foodGroup.foodGroupId].join(' ')}
                         </Typography>
                       </AccordionSummary>
                       <AccordionDetails>

@@ -24,8 +24,8 @@ const csvFiles = [
 
 const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): ReactElement => {
   const [expanded, setExpanded] = useState<string>('');
+  const [expandCategory, setExpandCategory] = useState<string>('');
   const [data, setData] = useState<any>(null);
-  // const groupedFoods = data ? groupBy(data.foodGroups, 'categorizedFoods') : null;
 
   const classes = useStyles();
 
@@ -33,57 +33,31 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): R
     setExpanded(isExpanded ? panel : '');
   }
 
-  // const constructData = async () => {
-  //   const [servingsPerDay, fgDirectionalStatements, foodGroups, foods] = await Promise.all(
-  //     csvFiles.map(file => parseCSV(file))
-  //   );
-
-  //   const ageAndGenderServings = servingsPerDay.filter(serving => {
-  //     return serving.ages === age && serving.gender === gender;
-  //   });
-
-  //   const foodsByFoodGroupId = groupBy(foods, 'fgid');
-
-  //   const foodGroupsData = foodGroups.map(foodGroup => {
-  //     const foodGroupFoods = foodsByFoodGroupId[foodGroup.fgid] || [];
-  //     const foodGroupServings = ageAndGenderServings.filter(serving => {
-  //       return serving.fgid === foodGroup.fgid;
-  //     });
-  
-  //     return {
-  //       id: foodGroup.fgid,
-  //       name: foodGroup.foodgroup,
-  //       servings: foodGroupServings,
-  //       foods: foodGroupFoods
-  //     };
-  //   });
-
-  //   const directionalStatementsData = fgDirectionalStatements.map(directionalStatement => {
-  //     const foodGroupIds = directionalStatement.fgid.split(',').map(id => parseInt(id.trim()));
-  
-  //     const associatedFoodGroups = foodGroupsData.filter(foodGroup => {
-  //       return foodGroupIds.includes(foodGroup.fgid);
-  //     });
-  
-  //     return {
-  //       id: directionalStatement.fgid,
-  //       text: directionalStatement['directional-statement'],
-  //       foodGroups: associatedFoodGroups
-  //     };
-  //   });
-
-  //   return {
-  //     ageRange: age,
-  //     gender,
-  //     foodGroups: foodGroupsData,
-  //     directionalStatements: directionalStatementsData,
-  //   }
-  // };
+  const handleCategoryChange = (panel: string) => (event: ChangeEvent<{}>, isExpanded: boolean) => {
+    setExpandCategory(isExpanded ? panel : '');
+  }
 
   const constructData = async () => {
     const [servingsPerDay, fgDirectionalStatements, foodGroups, foods]: any = await Promise.all(
       csvFiles.map(file => parseCSV(file))
     );
+
+    const categoryMap: any = {};
+
+    foodGroups.forEach((group: any) => {
+      categoryMap[group.fgcat_id] = group.fgcat;
+    });
+
+    const foodGroupToCategory = foodGroups.reduce((acc: any, curr: any) => {
+      if(!acc[curr.fgid]) {
+        acc[curr.fgid] = {
+          [curr.fgcat_id]: curr.fgcat,
+        };
+      } else {
+        acc[curr.fgid][curr.fgcat_id] = curr.fgcat;
+      }
+      return acc;
+    }, {});
 
     const getDirectionalStatementsByFgid = () => {
       const statementsByFgid: { [key: string]: string[] } = {};
@@ -101,7 +75,7 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): R
 
     const filteredServings = servingsPerDay.filter((serving: any) => serving.ages === age && serving.gender === gender);
 
-    const foodGroupsWithServings = foodGroups.map((group: any) => {
+    const foodGroupsWithServings = foodGroups.reduce((acc: any, group: any) => {
       const recommendedServings = filteredServings.find((serving: any) => serving.fgid === group.fgid)?.servings;
   
       const groupFoods = foods.filter((food: any) => food.fgid === group.fgid).map((food: any) => {
@@ -109,16 +83,21 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): R
           name: food.food,
           servingSize: food.srvg_sz,
           category: food.fgcat_id,
+          categoryName: categoryMap[food.fgcat_id],
         }
       });
-  
-      return {
-        name: group.foodgroup,
-        recommendedServings,
-        foods: groupFoods,
-        foodGroupId: group.fgid,
+      
+      if(!acc.find((foodGroup: any) => foodGroup.name === group.foodgroup)) {
+        acc.push({
+          name: group.foodgroup,
+          recommendedServings,
+          foods: groupFoods,
+          foodGroupId: group.fgid,
+        });
       }
-    });
+
+      return acc;
+    }, []);
 
     const categorizedFoods = foodGroupsWithServings.reduce((acc: any, curr: any) => {
       curr.foods.forEach((food: any) => {
@@ -130,29 +109,14 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): R
       return acc;
     }, {});
 
-    // const foodGroupsWithServings = foodGroups.map((group: any) => {
-    //   const recommendedServings = filteredServings.find((serving: any) => serving.fgid === group.fgid)?.servings;
-
-    //   const groupFoods = foods.filter((food: any) => food.fgid === group.fgid).map((food: any) => {
-    //     return {
-    //       name: food.food,
-    //       servingSize: food.srvg_sz,
-    //     }
-    //   });
-
-    //   return {
-    //     name: group.foodgroup,
-    //     recommendedServings,
-    //     foods: groupFoods
-    //   }
-    // });
-
     return {
       age,
       gender,
       foodGroups: uniqBy(foodGroupsWithServings, 'name'),
       categories: categorizedFoods,
       directionalStatements: getDirectionalStatementsByFgid(),
+      categoryMap,
+      foodGroupToCategory
     }
   };
 
@@ -169,65 +133,64 @@ const FoodGuide: FC<FoodGuideProps> = ({ age, gender, name }: FoodGuideProps): R
     return <Typography>Loading...</Typography>;
   }
 
-  console.log(data);
-
   return (
     <>
       <Typography variant="h5" style={{ paddingTop: '10px' }}>
         Guide for {name}, {gender} aged between {age}
       </Typography>
       <div className={classes.root}>
-        <TableContainer component={Paper}>
-          <Table className={classes.table} aria-label="Food Guide table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Food Group</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.foodGroups.map((foodGroup: any) => (
-                <TableRow key={foodGroup.name}>
-                  <TableCell component="th" scope="row">
-                    <Accordion expanded={expanded === foodGroup.name} onChange={handleChange(foodGroup.name)}>
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography className={classes.heading}>
-                          {foodGroup.name} with {foodGroup.recommendedServings} recommended servings
-                          <br />
-                          Directions: {data.directionalStatements[foodGroup.foodGroupId].join(' ')}
-                        </Typography>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        <TableContainer component={Paper}>
-                          <Table
-                            className={classes.table}
-                            aria-label={`${foodGroup.name} foods`}
-                          >
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>Name</TableCell>
-                                <TableCell align="center">Serving Size</TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {foodGroup.foods.map((food: any) => (
-                                <TableRow key={food.name}>
-                                  <TableCell component="th" scope="row">
-                                    {food.name}
-                                  </TableCell>
-                                  <TableCell align="center">{food.servingSize}</TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      </AccordionDetails>
-                    </Accordion>
-                  </TableCell>
-                </TableRow>
+        {data.foodGroups.map((foodGroup: any) => (
+          <Accordion expanded={expanded === foodGroup.name} onChange={handleChange(foodGroup.name)} key={foodGroup.foodGroupId}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <div>
+              <Typography variant='h6'>
+                {foodGroup.name} with <b>{foodGroup.recommendedServings} recommended servings</b>
+              </Typography>
+              <Typography className={classes.heading}>
+                Directions: {data.directionalStatements[foodGroup.foodGroupId].join(' ')}
+              </Typography>
+              </div>
+            </AccordionSummary>
+            <AccordionDetails>
+            <div className={classes.root}>
+              {Object.keys(data.foodGroupToCategory[foodGroup.foodGroupId]).map((category: any) => (
+                <Accordion expanded={expandCategory === category} onChange={handleCategoryChange(category)} key={category}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography className={classes.heading}>
+                      {data.foodGroupToCategory[foodGroup.foodGroupId][category]}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                  <TableContainer component={Paper}>
+                    <Table
+                      className={classes.table}
+                      aria-label={`${foodGroup.name} foods`}
+                    >
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Name</TableCell>
+                          <TableCell align="center">Serving Size</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {data.categories[category].map((food: any) => (
+                          <TableRow key={food.name + food.servingSize}>
+                            <TableCell component="th" scope="row">
+                              {food.name}
+                            </TableCell>
+                            <TableCell align="center">{food.servingSize}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  </AccordionDetails>
+                </Accordion>
               ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </div>
+            </AccordionDetails>
+          </Accordion>
+        ))}
       </div>
     </>
   );

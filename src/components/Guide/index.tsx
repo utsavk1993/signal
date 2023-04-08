@@ -5,8 +5,8 @@ import { useStyles } from './Guide.styles';
 import FamilyDailyMenu from '../FamilyDailyMenu';
 
 enum Guides {
-  YOU = 'you',
-  FAMILY = 'family',
+  PERSONAL = 'Personal',
+  FAMILY = 'Family',
 }
 
 const Guide: FC = (): ReactElement => {
@@ -26,19 +26,19 @@ const Guide: FC = (): ReactElement => {
           !guide && (
             <Grid container spacing={2} justifyContent="center" className={classes.button}>
               <Grid item xs={3}>
-                <Button fullWidth variant="contained" color="primary" onClick={() => setGuide(Guides.YOU)}>
-                  For you
+                <Button fullWidth variant="contained" color="primary" onClick={() => setGuide(Guides.PERSONAL)}>
+                  {Guides.PERSONAL}
                 </Button>
               </Grid>
               <Grid item xs={3}>
                 <Button fullWidth variant="contained" color="primary" onClick={() => setGuide(Guides.FAMILY)}>
-                  For your loved ones
+                  {Guides.FAMILY}
                 </Button>
               </Grid>
             </Grid>
           )
         }
-        { guide === Guides.YOU && <UserDailyMenu setGuide={setGuide} /> }
+        { guide === Guides.PERSONAL && <UserDailyMenu setGuide={setGuide} /> }
         { guide === Guides.FAMILY && <FamilyDailyMenu setGuide={setGuide} /> }
       </Container>
     </div>

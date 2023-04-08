@@ -11,4 +11,7 @@ export const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 650,
   },
+  accordion: {
+    flexDirection: 'column',
+  }
 }));

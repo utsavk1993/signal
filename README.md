@@ -2,6 +2,8 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+Check out the production deploy here: [Demo](https://react-canada-guide-signal.netlify.app/)
+
 ## Description
 
 The Government of Canada wishes to provide the Canada Food Guide as an online service to improve the health of Canadians. To test the idea, an MVP was outlined to adopt modern cloud-based methodologies to deploy a scalable healthy eating API.
